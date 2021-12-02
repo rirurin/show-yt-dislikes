@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Youtube Dislike Count Reenabler
 // @namespace    https://twitter.com/rirurinuser
-// @version      1.0
+// @version      1.1
 // @description  Youtube is now fixed
 // @author       rirurin
 // @match        https://www.youtube.com/*
@@ -20,11 +20,33 @@ let overwrittenElement;
     });
 
     function showYoutubeDislikeCount() {
+        // calculate dislikes
         let stars = window.yt.config_.SBOX_SETTINGS.SEARCHBOX_COMPONENT.__dataHost.parentComponent.__data.data.playerResponse.videoDetails.averageRating
         let title = window.yt.config_.SBOX_SETTINGS.SEARCHBOX_COMPONENT.__dataHost.parentComponent.__data.data.playerResponse.videoDetails.title
         let likes = parseInt(document.querySelector("#button[aria-label^='like this video']").getAttribute('aria-label').split('with ')[1].split(' ')[0].replaceAll(',',''))
         let dislikes = Math.round(likes/((stars- 1)/4) - likes)
         let elements = document.getElementsByClassName("ytd-toggle-button-renderer")
+        // make dislike display
+        let dislikeDisplay
+        let Mmultiply
+        let suffix
+        if (dislikes.toString().length > 3) {
+            if (dislikes.toString().length > 6) {
+                Mmultiply = 1000
+                suffix = "M"
+            } else if (dislikes.toString().length > 3) {
+                Mmultiply = 1
+                suffix = "K"
+            }
+            if ((dislikes.toString().length - 1) % 3 == 0) {
+                dislikeDisplay = `${Math.round(dislikes / (100 * Mmultiply))/10}${suffix}`
+            } else if ((dislikes.toString().length - 1) % 3 > 0) {
+                dislikeDisplay = `${Math.round(dislikes / (1000 * Mmultiply))}${suffix}`
+            }
+        } else {
+            dislikeDisplay = dislikes
+        }
+        // overwrite original dislike element
         if (overwrittenElement == null) {
             for (let i = 0; i < elements.length; i++) {
                 if (elements[i].innerHTML == "Dislike") {
@@ -33,9 +55,9 @@ let overwrittenElement;
             }
         }
         if (overwrittenElement == null) {
-            console.log("Could not find dislike text - you may not have that thing youtube decided to put on us")
+            console.log("Dislike text not found")
         } else {
-            overwrittenElement.innerHTML = dislikes
+            overwrittenElement.innerHTML = dislikeDisplay
         }
         console.log(`${title} has ${likes} likes and ${dislikes} dislikes`)
     }
